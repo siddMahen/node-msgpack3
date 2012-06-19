@@ -1,1 +1,1 @@
-module.exports = require("./build/Release/msgpack2.node");
+module.exports = require("./build/Release/msgpack3");

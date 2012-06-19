@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "msgpack2",
-      "sources": [ "src/msgpack2.cc" ]
+      "target_name": "msgpack3",
+      "sources": [ "src/msgpack3.cc" ]
     }
   ]
 }

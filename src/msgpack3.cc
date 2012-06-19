@@ -716,4 +716,4 @@ void Init(Handle<Object> target) {
       FunctionTemplate::New(Unpack)->GetFunction());
 }
 
-NODE_MODULE(msgpack2, Init)
+NODE_MODULE(msgpack3, Init)

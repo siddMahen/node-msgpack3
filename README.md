@@ -1,4 +1,4 @@
-# msgpack2
+# msgpack3
 
 A speedy implementation of the MessagePack serialization protocol, written
 from scratch.
@@ -22,7 +22,7 @@ var o = {
 };
 ```
 
-Is packed into 39 bytes by `msgpack2`, and 63 bytes by the native JSON library.
+Is packed into 39 bytes by `msgpack3`, and 63 bytes by the native JSON library.
 In this specific case, MessagePack was around 60% more space efficient. However,
 these kinds of savings are quite typical. In general, MessagePack messages are
 significantly more space efficient than JSON.
@@ -35,19 +35,19 @@ than node's native JSON library.
 It's on `npm`:
 
 ```
-$ npm install msgpack2
+$ npm install msgpack3
 ```
 
 ## Usage
 
-`msgpack2` provides two functions, `pack` and `unpack` which, respectively,
+`msgpack3` provides two functions, `pack` and `unpack` which, respectively,
 serialize and deserialize javascript objects.
 
-### `msgpack.pack(obj)`
+### msgpack.pack(obj)
 
 Takes a javascript object as input and returns a buffer.
 
-### `msgpack.unpack(buf)`
+### msgpack.unpack(buf)
 
 Takes a buffer as input and returns a javascript object.
 
@@ -56,7 +56,7 @@ See the source code for more details.
 ## Example
 
 ```
-var msgpack = require("msgpack2"),
+var msgpack = require("msgpack3"),
     assert = require("assert);
 
 var a = { a: 123, b: [1, 2, 3] }

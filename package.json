@@ -1,20 +1,20 @@
 {
   "author": "Siddharth Mahendraker <siddharth_mahen@me.com>",
-  "name": "msgpack2",
+  "name": "msgpack3",
   "description": "A fast MessagePack implementation.",
   "keywords": [
     "msgpack",
-    "msgpack2"
+    "msgpack3"
   ],
   "version": "0.1.0",
   "main": "./index.js",
   "bugs": {
-    "url" : "https://github.com/siddMahen/node-msgpack2/issues",
+    "url" : "https://github.com/siddMahen/node-msgpack3/issues",
     "email" : "siddharth_mahen@me.com"
   },
   "repository": {
     "type" : "git",
-    "url" : "git://github.com/siddMahen/node-msgpack2.git"
+    "url" : "git://github.com/siddMahen/node-msgpack3.git"
   },
   "scripts": {
     "test": "node test/test-pack.js && node test/test-unpack.js",
