@@ -1,0 +1,29 @@
+{
+  "author": "Siddharth Mahendraker <siddharth_mahen@me.com>",
+  "name": "msgpack2",
+  "description": "A fast MessagePack implementation.",
+  "keywords": [
+    "msgpack",
+    "msgpack2",
+    "message",
+    "C++"
+  ],
+  "version": "0.1.0",
+  "main": "./index.js",
+  "scripts": {
+    "test": "node test/test-pack.js && node test/test-unpack.js",
+    "preinstall": "node-gyp configure build",
+    "uninstall": "node-gyp clean"
+  },
+  "directories": {
+    "src": "./src",
+    "bench": "./bench",
+    "test": "./test"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": ">=0.7.11"
+  }
+}
