@@ -4,12 +4,18 @@
   "description": "A fast MessagePack implementation.",
   "keywords": [
     "msgpack",
-    "msgpack2",
-    "message",
-    "C++"
+    "msgpack2"
   ],
   "version": "0.1.0",
   "main": "./index.js",
+  "bugs": {
+    "url" : "https://github.com/siddMahen/node-msgpack2/issues",
+    "email" : "siddharth_mahen@me.com"
+  },
+  "repository": {
+    "type" : "git",
+    "url" : "git://github.com/siddMahen/node-msgpack2.git"
+  },
   "scripts": {
     "test": "node test/test-pack.js && node test/test-unpack.js",
     "preinstall": "node-gyp configure build",
