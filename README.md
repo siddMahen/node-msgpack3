@@ -1,7 +1,7 @@
 # msgpack3
 
 A speedy implementation of the MessagePack serialization protocol, written
-from scratch.
+from scratch in C++.
 
 MessagePack offers significant advantages over other serialization protocols,
 such as JSON, as it encodes objects very compactly. For example, the following
@@ -27,8 +27,14 @@ In this specific case, MessagePack was around 60% more space efficient. However,
 these kinds of savings are quite typical. In general, MessagePack messages are
 significantly more space efficient than JSON.
 
-**Disclaimer**: At the moment, this implementation of MessagePack is NOT faster
-than node's native JSON library.
+## Performance
+
+At the moment, this implementation of MessagePack is NOT faster
+than node's native JSON library. However, it is (marginally) faster than other
+msgpack libraries for node.js, such as [msgpack2](https://github.com/JulesAU/nod
+e-msgpack), at least in the benchmark I used (see `bench/bench.js`).
+
+For specifics, see the `TODO.md` file.
 
 ## Installation
 

@@ -63,9 +63,10 @@ static const uint8_t sizeof_logic(const uint8_t arg) {
     case 0xc3:
       return 1;
       break;
+    default:
+      return 0;
+      break;
   }
-
-  return 0;
 }
 
 static const uint8_t sizeof_number(const uint8_t arg) {
@@ -89,9 +90,10 @@ static const uint8_t sizeof_number(const uint8_t arg) {
     case DOUBLE:
       return 9;
       break;
+    default:
+      return 0;
+      break;
   }
-
-  return 0;
 }
 
 static const uint8_t sizeof_raw(const uint8_t arg){
@@ -105,9 +107,10 @@ static const uint8_t sizeof_raw(const uint8_t arg){
     case RAW_32:
       return 5;
       break;
+    default:
+      return 0;
+      break;
   }
-
-  return 0;
 }
 
 static const uint8_t sizeof_array(const uint8_t arg){
@@ -121,9 +124,10 @@ static const uint8_t sizeof_array(const uint8_t arg){
     case ARRAY_32:
       return 5;
       break;
+    default:
+      return 0;
+      break;
   }
-
-  return 0;
 }
 
 static const uint8_t sizeof_map(const uint8_t arg){
@@ -137,9 +141,10 @@ static const uint8_t sizeof_map(const uint8_t arg){
     case MAP_32:
       return 5;
       break;
+    default:
+      return 0;
+      break;
   }
-
-  return 0;
 }
 
 static const uint8_t type(const Local<Value>& arg){
@@ -264,7 +269,7 @@ static const uint32_t sizeof_obj(const Local<Value>& obj){
     return size;
 }
 
-static const uint32_t pack(const Local<Value>& obj, uint8_t *data, const bool needSize){
+static const uint32_t pack(const Local<Value>& obj, uint8_t *data){
     HandleScope scope;
 
     uint8_t disc = type(obj);
@@ -311,8 +316,8 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data, const bool ne
             Local<Value> key = keys->Get(i);
             Local<Value> val = node->Get(key);
 
-            offset += pack(key, data + offset, true);
-            offset += pack(val, data + offset, true);
+            offset += pack(key, data + offset);
+            offset += pack(val, data + offset);
         }
     }else if((ssize = sizeof_array(disc))){
         Handle<Array> node = Handle<Array>::Cast(obj);
@@ -347,7 +352,7 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data, const bool ne
 
         for(uint32_t i = 0; i < size; i++){
             Local<Value> val = node->Get(i);
-            offset += pack(val, data + offset, true);
+            offset += pack(val, data + offset);
         }
     }else if((ssize = sizeof_raw(disc))){
         Local<String> node = obj->ToString();
@@ -381,6 +386,7 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data, const bool ne
         offset += ssize;
 
         node->WriteUtf8((char*)data + offset, size);
+        offset += size;
     }else if((ssize = sizeof_number(disc))){
         Local<Number> node = obj->ToNumber();
 
@@ -459,7 +465,7 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data, const bool ne
         offset += ssize;
     }
 
-    return (needSize == true ? sizeof_obj(obj) : 0);
+    return offset;
 }
 
 static void buffer_free(char *data, void *hint){
@@ -472,94 +478,12 @@ static Handle<Value> Pack(const Arguments& args){
 
     const uint32_t size = sizeof_obj(obj);
     uint8_t *data = new uint8_t[size];
-    pack(obj, data, false);
+    pack(obj, data);
 
     return scope.Close((Buffer::New((char *)data, (size_t)size, &buffer_free, NULL))->handle_);
 }
 
-static Handle<Array> sizeof_variable(const uint8_t *buf, const uint8_t type, uint32_t ssize){
-    HandleScope scope;
-
-    Local<Array> lengths = Array::New(0);
-    uint32_t offset = 0;
-
-    switch(type){
-        case ARRAY_32:
-        case MAP_32:
-            offset += 3;
-            break;
-        case ARRAY_16:
-        case MAP_16:
-            offset += 2;
-            break;
-        case ARRAY_FIX:
-        case MAP_FIX:
-            offset += 1;
-            break;
-    }
-
-    if(sizeof_map(type)){
-        ssize *= 2;
-    }
-
-    for(uint32_t i = 0; i < ssize; i++){
-        const uint8_t marker = reverseType(buf[offset]);
-        uint32_t size = (sizeof_number(marker) ? sizeof_number(marker) : sizeof_logic(marker));
-
-        if(!size){
-            uint8_t psize;
-            if((psize = sizeof_raw(marker))){
-                uint32_t len;
-
-                switch(marker){
-                    case RAW_FIX:
-                        len = buf[offset] ^ RAW_FIX;
-                        break;
-                    case RAW_16:
-                        len = read2Bytes(buf, offset + 1);
-                        break;
-                    case RAW_32:
-                        len = read4Bytes(buf, offset + 1);
-                        break;
-                }
-
-                size += len + psize;
-            }else if((psize = (sizeof_array(marker) || sizeof_map(marker)))){
-                uint32_t len;
-
-                switch(marker){
-                    case ARRAY_FIX:
-                    case MAP_FIX:
-                        len = buf[offset] ^ marker;
-                        break;
-                    case ARRAY_16:
-                    case MAP_16:
-                        len = read2Bytes(buf, offset + 1);
-                        break;
-                    case ARRAY_32:
-                    case MAP_32:
-                        len = read4Bytes(buf, offset + 1);
-                        break;
-                }
-
-                Handle<Array> array = sizeof_variable(&(buf[offset]), marker, len);
-
-                for(uint32_t j = 0; j < array->Length(); j++){
-                    size += array->Get(j)->Uint32Value();
-                }
-
-                size += psize;
-            }
-        }
-
-        lengths->Set(i, Integer::NewFromUnsigned(size));
-        offset += size;
-    }
-
-    return scope.Close(lengths);
-}
-
-static Handle<Value> unpack(const uint8_t *buf){
+static Handle<Value> unpack(const uint8_t *buf, uint32_t& s){
     HandleScope scope;
 
     const uint8_t disc = reverseType(buf[0]);
@@ -584,15 +508,15 @@ static Handle<Value> unpack(const uint8_t *buf){
                 break;
         }
 
-        Handle<Array> lengths = sizeof_variable(buf, disc, len);
+        s += ssize;
 
         for(uint32_t i = 0; i < len*2; i+=2){
-            end += lengths->Get(i)->Uint32Value();
-            Handle<Value> key = unpack(buf + start);
+            Handle<Value> key = unpack(buf + start, end);
+            s += end - start;
             start = end;
 
-            end += lengths->Get(i+1)->Uint32Value();
-            Handle<Value> value = unpack(buf + start);
+            Handle<Value> value = unpack(buf + start, end);
+            s += end - start;
             start = end;
 
             map->Set(key, value);
@@ -618,11 +542,11 @@ static Handle<Value> unpack(const uint8_t *buf){
                 break;
         }
 
-        Handle<Array> lengths = sizeof_variable(buf, disc, len);
+        s += ssize;
 
         for(uint32_t i = 0; i < len; i++){
-            end += lengths->Get(i)->Uint32Value();
-            array->Set(i, unpack(buf + start));
+            array->Set(i, unpack(buf + start, end));
+            s += end - start;
             start = end;
         }
 
@@ -642,8 +566,13 @@ static Handle<Value> unpack(const uint8_t *buf){
                 break;
         }
 
+        s += ssize + len;
+
         return scope.Close(String::New((char *)(buf + ssize), len));
     }else if((ssize = sizeof_number(disc))){
+
+        s += ssize;
+
         switch(disc){
             case POS_FIXNUM:
                 return scope.Close(Integer::NewFromUnsigned(buf[0]));
@@ -686,6 +615,9 @@ static Handle<Value> unpack(const uint8_t *buf){
 
         }
     }else if((ssize = sizeof_logic(disc))){
+
+        s += ssize;
+
         if(disc == NIL){
             return scope.Close(Null());
         }else{
@@ -706,7 +638,8 @@ static Handle<Value> Unpack(const Arguments& args){
         return scope.Close(Undefined());
     }
 
-    return scope.Close(unpack((uint8_t *)Buffer::Data(buf)));
+    uint32_t s = 0;
+    return scope.Close(unpack((uint8_t *)Buffer::Data(buf), s));
 }
 
 void Init(Handle<Object> target) {
