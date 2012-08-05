@@ -6,7 +6,7 @@
     "msgpack",
     "msgpack3"
   ],
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "./index.js",
   "bugs": {
     "url" : "https://github.com/siddMahen/node-msgpack3/issues",
