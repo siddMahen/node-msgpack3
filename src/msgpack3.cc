@@ -6,30 +6,30 @@
 #include <node_buffer.h>
 
 enum MSG_PACK_TYPE {
-    POS_FIXNUM = 0x00,
-    MAP_FIX    = 0x80,
-    ARRAY_FIX  = 0x90,
-    RAW_FIX    = 0xa0,
-    NIL        = 0xc0,
-    FALSE      = 0xc2,
-    TRUE       = 0xc3,
-    FLOAT      = 0xca, /* Not supported */
-    DOUBLE     = 0xcb,
-    UINT_8     = 0xcc,
-    UINT_16    = 0xcd,
-    UINT_32    = 0xce,
-    UINT_64    = 0xcf, /* Not supported */
-    INT_8      = 0xd0,
-    INT_16     = 0xd1,
-    INT_32     = 0xd2,
-    INT_64     = 0xd3, /* Not supported */
-    RAW_16     = 0xda,
-    RAW_32     = 0xdb,
-    ARRAY_16   = 0xdc,
-    ARRAY_32   = 0xdd,
-    MAP_16     = 0xde,
-    MAP_32     = 0xdf,
-    NEG_FIXNUM = 0xe0
+    MSG_PACK_POS_FIXNUM = 0x00,
+    MSG_PACK_MAP_FIX    = 0x80,
+    MSG_PACK_ARRAY_FIX  = 0x90,
+    MSG_PACK_RAW_FIX    = 0xa0,
+    MSG_PACK_NIL        = 0xc0,
+    MSG_PACK_FALSE      = 0xc2,
+    MSG_PACK_TRUE       = 0xc3,
+    MSG_PACK_FLOAT      = 0xca, /* Not supported */
+    MSG_PACK_DOUBLE     = 0xcb,
+    MSG_PACK_UINT_8     = 0xcc,
+    MSG_PACK_UINT_16    = 0xcd,
+    MSG_PACK_UINT_32    = 0xce,
+    MSG_PACK_UINT_64    = 0xcf, /* Not supported */
+    MSG_PACK_INT_8      = 0xd0,
+    MSG_PACK_INT_16     = 0xd1,
+    MSG_PACK_INT_32     = 0xd2,
+    MSG_PACK_INT_64     = 0xd3, /* Not supported */
+    MSG_PACK_RAW_16     = 0xda,
+    MSG_PACK_RAW_32     = 0xdb,
+    MSG_PACK_ARRAY_16   = 0xdc,
+    MSG_PACK_ARRAY_32   = 0xdd,
+    MSG_PACK_MAP_16     = 0xde,
+    MSG_PACK_MAP_32     = 0xdf,
+    MSG_PACK_NEG_FIXNUM = 0xe0
 };
 
 using namespace v8;
@@ -71,23 +71,23 @@ static const uint8_t sizeof_logic(const uint8_t arg) {
 
 static const uint8_t sizeof_number(const uint8_t arg) {
   switch(arg){
-    case POS_FIXNUM:
-    case NEG_FIXNUM:
+    case MSG_PACK_POS_FIXNUM:
+    case MSG_PACK_NEG_FIXNUM:
       return 1;
       break;
-    case UINT_8:
-    case INT_8:
+    case MSG_PACK_UINT_8:
+    case MSG_PACK_INT_8:
       return 2;
       break;
-    case UINT_16:
-    case INT_16:
+    case MSG_PACK_UINT_16:
+    case MSG_PACK_INT_16:
       return 3;
       break;
-    case UINT_32:
-    case INT_32:
+    case MSG_PACK_UINT_32:
+    case MSG_PACK_INT_32:
       return 5;
       break;
-    case DOUBLE:
+    case MSG_PACK_DOUBLE:
       return 9;
       break;
     default:
@@ -98,13 +98,13 @@ static const uint8_t sizeof_number(const uint8_t arg) {
 
 static const uint8_t sizeof_raw(const uint8_t arg){
   switch(arg){
-    case RAW_FIX:
+    case MSG_PACK_RAW_FIX:
       return 1;
       break;
-    case RAW_16:
+    case MSG_PACK_RAW_16:
       return 3;
       break;
-    case RAW_32:
+    case MSG_PACK_RAW_32:
       return 5;
       break;
     default:
@@ -115,13 +115,13 @@ static const uint8_t sizeof_raw(const uint8_t arg){
 
 static const uint8_t sizeof_array(const uint8_t arg){
   switch(arg){
-    case ARRAY_FIX:
+    case MSG_PACK_ARRAY_FIX:
       return 1;
       break;
-    case ARRAY_16:
+    case MSG_PACK_ARRAY_16:
       return 3;
       break;
-    case ARRAY_32:
+    case MSG_PACK_ARRAY_32:
       return 5;
       break;
     default:
@@ -132,13 +132,13 @@ static const uint8_t sizeof_array(const uint8_t arg){
 
 static const uint8_t sizeof_map(const uint8_t arg){
   switch(arg){
-    case MAP_FIX:
+    case MSG_PACK_MAP_FIX:
       return 1;
       break;
-    case MAP_16:
+    case MSG_PACK_MAP_16:
       return 3;
       break;
-    case MAP_32:
+    case MSG_PACK_MAP_32:
       return 5;
       break;
     default:
@@ -152,66 +152,66 @@ static const uint8_t type(const Local<Value>& arg){
     if(arg->IsString()){
         const int len = arg->ToString()->Utf8Length();
         if(len < 32){
-            return RAW_FIX;
+            return MSG_PACK_RAW_FIX;
         }else if(len < 0x10000){
-            return RAW_16;
+            return MSG_PACK_RAW_16;
         }else{
-            return RAW_32;
+            return MSG_PACK_RAW_32;
         }
     }else if(arg->IsArray()){
         Local<Array> array = Local<Array>::Cast(arg);
         const uint32_t len = array->Length();
         if(len < 16){
-            return ARRAY_FIX;
+            return MSG_PACK_ARRAY_FIX;
         }else if(len < 0x10000){
-            return ARRAY_16;
+            return MSG_PACK_ARRAY_16;
         }else{
-            return ARRAY_32;
+            return MSG_PACK_ARRAY_32;
         }
     }else if(arg->IsObject()){
         Local<Object> obj = arg->ToObject();
         const uint32_t size = obj->GetOwnPropertyNames()->Length();
         if(size < 16){
-            return MAP_FIX;
+            return MSG_PACK_MAP_FIX;
         }else if(size < 0x10000){
-            return MAP_16;
+            return MSG_PACK_MAP_16;
         }else{
-            return MAP_32;
+            return MSG_PACK_MAP_32;
         }
     }else if(arg->IsNumber()){
         if(arg->IsUint32()){
             const uint32_t val = arg->Uint32Value();
-            if(val < MAP_FIX){
-                return POS_FIXNUM;
+            if(val < MSG_PACK_MAP_FIX){
+                return MSG_PACK_POS_FIXNUM;
             }else if(val < 0x100){
-                return UINT_8;
+                return MSG_PACK_UINT_8;
             }else if(val < 0x10000){
-                return UINT_16;
+                return MSG_PACK_UINT_16;
             }else{
-                return UINT_32;
+                return MSG_PACK_UINT_32;
             }
         }else if(arg->IsInt32()){
             const int32_t val = arg->Int32Value();
             if(val >= -32){
-                return NEG_FIXNUM;
+                return MSG_PACK_NEG_FIXNUM;
             }else if(val > -0x80){
-                return INT_8;
+                return MSG_PACK_INT_8;
             }else if(val > -0x8000){
-                return INT_16;
+                return MSG_PACK_INT_16;
             }else{
-                return INT_32;
+                return MSG_PACK_INT_32;
             }
         }else{
-            return DOUBLE;
+            return MSG_PACK_DOUBLE;
         }
     }else if(arg->IsBoolean()){
         if(arg->BooleanValue() == true){
-            return TRUE;
+            return MSG_PACK_TRUE;
         }else{
-            return FALSE;
+            return MSG_PACK_FALSE;
         }
     }else if(arg->IsNull() || arg->IsUndefined()){
-        return NIL;
+        return MSG_PACK_NIL;
     }
 
     ThrowException(Exception::TypeError(String::New("Unknow MessagePack Type")));
@@ -220,15 +220,15 @@ static const uint8_t type(const Local<Value>& arg){
 
 static const uint8_t reverseType(const uint8_t obj){
     if(obj <= 0x7f){
-        return POS_FIXNUM;
+        return MSG_PACK_POS_FIXNUM;
     }else if(obj <= 0x8f){
-        return MAP_FIX;
+        return MSG_PACK_MAP_FIX;
     }else if(obj <= 0x9f){
-        return ARRAY_FIX;
+        return MSG_PACK_ARRAY_FIX;
     }else if(obj <= 0xbf){
-        return RAW_FIX;
+        return MSG_PACK_RAW_FIX;
     }else if(obj >= 0xe0){
-        return NEG_FIXNUM;
+        return MSG_PACK_NEG_FIXNUM;
     }
 
     return obj;
@@ -285,17 +285,17 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data){
         uint8_t *d;
 
         switch(disc){
-            case MAP_FIX:{
+            case MSG_PACK_MAP_FIX:{
                 uint8_t len[] = { (disc | size) };
                 d = len;
                 break;
             }
-            case MAP_16:{
+            case MSG_PACK_MAP_16:{
                 uint8_t len[] = { disc, (size >> 8), (size & 0xff) };
                 d = len;
                 break;
             }
-            case MAP_32:{
+            case MSG_PACK_MAP_32:{
                 uint8_t len[] = { disc, (size >> 24), (size >> 16) & 0xff,
                     (size >> 8) & 0xff, (size & 0xff) };
                 d = len;
@@ -326,17 +326,17 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data){
         uint8_t *d;
 
         switch(disc){
-            case ARRAY_FIX:{
+            case MSG_PACK_ARRAY_FIX:{
                 uint8_t len[] = { (disc | size) };
                 d = len;
                 break;
             }
-            case ARRAY_16:{
+            case MSG_PACK_ARRAY_16:{
                 uint8_t len[] = { disc, (size >> 8), (size & 0xff) };
                 d = len;
                 break;
             }
-            case ARRAY_32:{
+            case MSG_PACK_ARRAY_32:{
                 uint8_t len[] = { disc, (size >> 24), (size >> 16) & 0xff,
                     (size >> 8) & 0xff, (size & 0xff) };
                 d = len;
@@ -361,17 +361,17 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data){
         uint8_t *d;
 
         switch(disc){
-            case RAW_FIX:{
+            case MSG_PACK_RAW_FIX:{
                 uint8_t len[] = { (disc | size) };
                 d = len;
                 break;
             }
-            case RAW_16:{
+            case MSG_PACK_RAW_16:{
                 uint8_t len[] = { disc, (size >> 8), (size & 0xff) };
                 d = len;
                 break;
             }
-            case RAW_32:{
+            case MSG_PACK_RAW_32:{
                 uint8_t len[] = { disc, (size >> 24), (size >> 16) & 0xff,
                     (size >> 8) & 0xff, (size & 0xff) };
                 d = len;
@@ -393,55 +393,55 @@ static const uint32_t pack(const Local<Value>& obj, uint8_t *data){
         uint8_t *d;
 
         switch(disc){
-            case POS_FIXNUM:{
+            case MSG_PACK_POS_FIXNUM:{
                 uint8_t len[] = { node->Uint32Value() & 0xff };
                 d = len;
                 break;
             }
-            case NEG_FIXNUM:{
+            case MSG_PACK_NEG_FIXNUM:{
                 uint8_t len[] = { node->Int32Value() & 0xff };
                 d = len;
                 break;
             }
-            case UINT_8:{
+            case MSG_PACK_UINT_8:{
                 uint32_t num = node->Uint32Value();
                 uint8_t len[] = { disc, (num & 0xff) };
                 d = len;
                 break;
             }
-            case INT_8:{
+            case MSG_PACK_INT_8:{
                 int32_t num = node->Int32Value();
                 uint8_t len[] = { disc, (num & 0xff) };
                 d = len;
                 break;
             }
-            case UINT_16:{
+            case MSG_PACK_UINT_16:{
                 uint32_t num = node->Uint32Value();
                 uint8_t len[] = { disc, (num >> 8) & 0xff, num & 0xff };
                 d = len;
                 break;
             }
-            case INT_16:{
+            case MSG_PACK_INT_16:{
                 int32_t num = node->Int32Value();
                 uint8_t len[] = { disc, (num >> 8) & 0xff, num & 0xff };
                 d = len;
                 break;
             }
-            case UINT_32:{
+            case MSG_PACK_UINT_32:{
                 uint32_t num = node->Uint32Value();
                 uint8_t len[] = { disc, num >> 24, (num >> 16) & 0xff,
                     (num >> 8) & 0xff, num & 0xff };
                 d = len;
                 break;
             }
-            case INT_32:{
+            case MSG_PACK_INT_32:{
                 int32_t num = node->Int32Value();
                 uint8_t len[] = { disc, num >> 24, (num >> 16) & 0xff,
                     (num >> 8) & 0xff, num & 0xff };
                 d = len;
                 break;
             }
-            case DOUBLE:{
+            case MSG_PACK_DOUBLE:{
                 double num = node->Value();
                 const uint8_t *c = reinterpret_cast<uint8_t *>(&num);
                 uint8_t len[] = { disc, c[7], c[6], c[5], c[4], c[3], c[2], c[1], c[0] };
@@ -497,13 +497,13 @@ static Handle<Value> unpack(const uint8_t *buf, uint32_t& s){
         uint32_t end = start;
 
         switch(disc){
-            case MAP_FIX:
-                len = buf[0] ^ MAP_FIX;
+            case MSG_PACK_MAP_FIX:
+                len = buf[0] ^ MSG_PACK_MAP_FIX;
                 break;
-            case MAP_16:
+            case MSG_PACK_MAP_16:
                 len = read2Bytes(buf, 1);
                 break;
-            case MAP_32:
+            case MSG_PACK_MAP_32:
                 len = read4Bytes(buf, 1);
                 break;
         }
@@ -531,13 +531,13 @@ static Handle<Value> unpack(const uint8_t *buf, uint32_t& s){
         uint32_t end = start;
 
         switch(disc){
-            case ARRAY_FIX:
-                len = buf[0] ^ ARRAY_FIX;
+            case MSG_PACK_ARRAY_FIX:
+                len = buf[0] ^ MSG_PACK_ARRAY_FIX;
                 break;
-            case ARRAY_16:
+            case MSG_PACK_ARRAY_16:
                 len = read2Bytes(buf, 1);
                 break;
-            case ARRAY_32:
+            case MSG_PACK_ARRAY_32:
                 len = read4Bytes(buf, 1);
                 break;
         }
@@ -555,13 +555,13 @@ static Handle<Value> unpack(const uint8_t *buf, uint32_t& s){
         uint32_t len;
 
         switch(disc){
-            case RAW_FIX:
-                len = buf[0] ^ RAW_FIX;
+            case MSG_PACK_RAW_FIX:
+                len = buf[0] ^ MSG_PACK_RAW_FIX;
                 break;
-            case RAW_16:
+            case MSG_PACK_RAW_16:
                 len = read2Bytes(buf, 1);
                 break;
-            case RAW_32:
+            case MSG_PACK_RAW_32:
                 len = read4Bytes(buf, 1);
                 break;
         }
@@ -574,31 +574,31 @@ static Handle<Value> unpack(const uint8_t *buf, uint32_t& s){
         s += ssize;
 
         switch(disc){
-            case POS_FIXNUM:
+            case MSG_PACK_POS_FIXNUM:
                 return scope.Close(Integer::NewFromUnsigned(buf[0]));
                 break;
-            case NEG_FIXNUM:
+            case MSG_PACK_NEG_FIXNUM:
                 return scope.Close(Integer::New((int8_t)buf[0]));
                 break;
-            case UINT_8:
+            case MSG_PACK_UINT_8:
                 return scope.Close(Integer::NewFromUnsigned((uint8_t)buf[1]));
                 break;
-            case INT_8:
+            case MSG_PACK_INT_8:
                 return scope.Close(Integer::New((int8_t)buf[1]));
                 break;
-            case UINT_16:
+            case MSG_PACK_UINT_16:
                 return scope.Close(Integer::NewFromUnsigned(read2Bytes(buf, 1)));
                 break;
-            case INT_16:
+            case MSG_PACK_INT_16:
                 return scope.Close(Integer::New((int16_t)read2Bytes(buf, 1)));
                 break;
-            case UINT_32:
+            case MSG_PACK_UINT_32:
                 return scope.Close(Integer::NewFromUnsigned(read4Bytes(buf, 1)));
                 break;
-            case INT_32:
+            case MSG_PACK_INT_32:
                 return scope.Close(Integer::New((int32_t)read4Bytes(buf, 1)));
                 break;
-            case DOUBLE:{
+            case MSG_PACK_DOUBLE:{
                 // TODO: Hacky, make this tidier
                 double d;
                 memcpy(&d, buf + 1, sizeof(double));
@@ -618,10 +618,10 @@ static Handle<Value> unpack(const uint8_t *buf, uint32_t& s){
 
         s += ssize;
 
-        if(disc == NIL){
+        if(disc == MSG_PACK_NIL){
             return scope.Close(Null());
         }else{
-            return scope.Close(Boolean::New((disc == TRUE ? true : false)));
+            return scope.Close(Boolean::New((disc == MSG_PACK_TRUE ? true : false)));
         }
     }
 
